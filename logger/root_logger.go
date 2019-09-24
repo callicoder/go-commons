@@ -10,8 +10,8 @@ import (
 
 var rootLogger *logrus.Logger
 
-func SetupRootLogger(logLevel string) {
-	level, err := logrus.ParseLevel(logLevel)
+func SetupRootLogger(conf Config) {
+	level, err := logrus.ParseLevel(conf.Level)
 	if err != nil {
 		level = logrus.WarnLevel
 	}
@@ -105,5 +105,8 @@ func Fatal(args ...interface{}) {
 }
 
 func init() {
-	SetupRootLogger("warn")
+	conf := Config{
+		Level: "warn",
+	}
+	SetupRootLogger(conf)
 }
