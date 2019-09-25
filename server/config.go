@@ -12,4 +12,5 @@ type Config struct {
 type CORSConfig struct {
 	AllowedOrigins []string
 	AllowedHeaders []string
+	AllowedMethods []string
 }
