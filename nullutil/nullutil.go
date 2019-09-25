@@ -1,4 +1,4 @@
-package nullutils
+package nullutil
 
 import (
 	"database/sql"
