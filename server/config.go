@@ -6,5 +6,10 @@ type Config struct {
 	ReadTimeoutSec             int
 	WriteTimeoutSec            int
 	GracefulShutdownTimeoutSec int
-	CORSAllowedOrigins         []string
+	CORS                       CORSConfig
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string
+	AllowedHeaders []string
 }
