@@ -1,5 +1,17 @@
 package logger
 
+type Format string
+
+const (
+	TextFormat Format = "text"
+	JsonFormat Format = "json"
+)
+
+type Config struct {
+	Level  string
+	Format string
+}
+
 type Logger interface {
 	Debug(args ...interface{})
 	Info(args ...interface{})

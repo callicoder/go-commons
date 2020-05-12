@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"os"
 	"runtime"
 	"strings"
 
@@ -10,21 +9,8 @@ import (
 
 var rootLogger *logrus.Logger
 
-func SetupRootLogger(conf Config) {
-	level, err := logrus.ParseLevel(conf.Level)
-	if err != nil {
-		level = logrus.WarnLevel
-	}
-
-	rootLogger = &logrus.Logger{
-		Out: os.Stdout,
-		Formatter: &logrus.TextFormatter{
-			FullTimestamp:          true,
-			DisableLevelTruncation: true,
-		},
-		Hooks: make(logrus.LevelHooks),
-		Level: level,
-	}
+func SetupRootLogger(c Config) {
+	rootLogger = newLogrusLogger(c)
 }
 
 func WithFields(fields Fields) Logger {
@@ -102,11 +88,4 @@ func Error(args ...interface{}) {
 
 func Fatal(args ...interface{}) {
 	WithFields(nil).Fatal(args...)
-}
-
-func init() {
-	conf := Config{
-		Level: "warn",
-	}
-	SetupRootLogger(conf)
 }
