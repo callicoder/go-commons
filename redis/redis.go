@@ -35,6 +35,15 @@ type RedisClient interface {
 	GetBytes(key string) ([]byte, error)
 	GetString(key string) (string, error)
 	GetStruct(key string, v interface{}) error
+	Keys(pattern string) []string
+	Del(key string) error
+
+	HSet(key, field string, value interface{}) error
+	HSetTTL(key, field string, value interface{}, t time.Duration)
+	HGet(key, field string) (string, error)
+	HGetAll(key string) map[string]string
+	HDel(key, field string) error
+
 	Close() error
 	ClusterMode() bool
 	Single() *redis.Client
@@ -167,6 +176,77 @@ func (r *redisClient) GetStruct(key string, v interface{}) error {
 	}
 
 	return json.Unmarshal(value, v)
+}
+
+func (r *redisClient) Keys(pattern string) []string {
+	if r.clusterMode {
+		return r.cluster.Keys(pattern).Val()
+	}
+	return r.single.Keys(pattern).Val()
+}
+
+func (r *redisClient) Del(key string) error {
+	if r.clusterMode {
+		return r.cluster.Del(key).Err()
+	}
+	return r.single.Del(key).Err()
+}
+
+func (r *redisClient) HSet(key, field string, value interface{}) error {
+	if r.clusterMode {
+		return r.cluster.HSet(key, field, value).Err()
+	}
+	return r.single.HSet(key, field, value).Err()
+}
+
+func (r *redisClient) HSetTTL(key, field string, value interface{}, ttl time.Duration) error {
+	if r.clusterMode {
+		pipe := r.cluster.TxPipeline()
+		pipe.HSet(key, field, value)
+		pipe.Expire(key, ttl)
+
+		_, err := pipe.Exec()
+		return err
+	}
+	pipe := r.single.TxPipeline()
+	pipe.HSet(key, field, value)
+	pipe.Expire(key, ttl)
+
+	_, err := pipe.Exec()
+	return err
+}
+
+func (r *redisClient) HGet(key, field string) (string, error) {
+	var (
+		value string
+		err   error
+	)
+
+	if r.clusterMode {
+		value, err = r.cluster.HGet(key, field).Result()
+	} else {
+		value, err = r.single.HGet(key, field).Result()
+	}
+
+	if err != nil {
+		return "", cacheError(err)
+	}
+
+	return value, nil
+}
+
+func (r *redisClient) HGetAll(k string) map[string]string {
+	if r.clusterMode {
+		return r.cluster.HGetAll(k).Val()
+	}
+	return r.single.HGetAll(k).Val()
+}
+
+func (r *redisClient) HDel(k, field string) error {
+	if r.clusterMode {
+		return r.cluster.HDel(k, field).Err()
+	}
+	return r.single.HDel(k, field).Err()
 }
 
 func (r *redisClient) ClusterMode() bool {
