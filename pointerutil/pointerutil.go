@@ -1,5 +1,9 @@
 package pointerutil
 
+import (
+	"time"
+)
+
 func NewPointerString(s string) *string {
 	if s == "" {
 		return nil
