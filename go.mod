@@ -6,6 +6,7 @@ require (
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/go-redis/redis_rate/v7 v7.0.1
 	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/gorilla/handlers v1.4.2
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1

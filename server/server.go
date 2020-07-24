@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/handlers"
 )
 
 type Server struct {
@@ -14,11 +16,11 @@ type Server struct {
 }
 
 func New(conf Config, handler http.Handler) *Server {
-	allowedMethods := gHandlers.AllowedMethods(conf.CORS.AllowedMethods)
-	allowedHeaders := gHandlers.AllowedHeaders(conf.CORS.AllowedHeaders)
-	allowedOrigins := gHandlers.AllowedOrigins(conf.CORS.AllowedOrigins)
-	maxAge := gHandlers.MaxAge(conf.CORS.MaxAge)
-	handler = gHandlers.CORS(allowedMethods, allowedHeaders, allowedOrigins, maxAge)(handler)
+	allowedMethods := handlers.AllowedMethods(conf.CORS.AllowedMethods)
+	allowedHeaders := handlers.AllowedHeaders(conf.CORS.AllowedHeaders)
+	allowedOrigins := handlers.AllowedOrigins(conf.CORS.AllowedOrigins)
+	maxAge := handlers.MaxAge(conf.CORS.MaxAge)
+	handler = handlers.CORS(allowedMethods, allowedHeaders, allowedOrigins, maxAge)(handler)
 
 	return &Server{
 		httpServer: &http.Server{
