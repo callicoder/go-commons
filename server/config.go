@@ -1,12 +1,12 @@
 package server
 
 type Config struct {
-	ContextPath                string
-	Port                       int
-	ReadTimeoutSec             int
-	WriteTimeoutSec            int
-	GracefulShutdownTimeoutSec int
-	CORS                       CORSConfig
+	ContextPath             string
+	Port                    int
+	ReadTimeout             int
+	WriteTimeout            int
+	GracefulShutdownTimeout int
+	CORS                    CORSConfig
 }
 
 type CORSConfig struct {

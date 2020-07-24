@@ -18,13 +18,9 @@ type RedisRateLimiter struct {
 }
 
 // NewRateLimiter gives a ratelimiter with given redis pool and configuration
-func NewRateLimiter(redisClient redis.RedisClient) *RedisRateLimiter {
+func NewRateLimiter(redisClient redis.Client) *RedisRateLimiter {
 	var limiter *redis_rate.Limiter
-	if redisClient.ClusterMode() {
-		limiter = redis_rate.NewLimiter(redisClient.Cluster())
-	} else {
-		limiter = redis_rate.NewLimiter(redisClient.Single())
-	}
+	limiter = redis_rate.NewLimiter(redisClient)
 
 	return &RedisRateLimiter{
 		limiter: limiter,
