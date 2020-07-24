@@ -13,7 +13,7 @@ type Server struct {
 	config     Config
 }
 
-func NewServer(conf Config, handler http.Handler) *Server {
+func New(conf Config, handler http.Handler) *Server {
 	allowedMethods := gHandlers.AllowedMethods(conf.CORS.AllowedMethods)
 	allowedHeaders := gHandlers.AllowedHeaders(conf.CORS.AllowedHeaders)
 	allowedOrigins := gHandlers.AllowedOrigins(conf.CORS.AllowedOrigins)
