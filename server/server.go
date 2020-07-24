@@ -14,6 +14,12 @@ type Server struct {
 }
 
 func NewServer(conf Config, handler http.Handler) *Server {
+	allowedMethods := gHandlers.AllowedMethods(conf.CORS.AllowedMethods)
+	allowedHeaders := gHandlers.AllowedHeaders(conf.CORS.AllowedHeaders)
+	allowedOrigins := gHandlers.AllowedOrigins(conf.CORS.AllowedOrigins)
+	maxAge := gHandlers.MaxAge(conf.CORS.MaxAge)
+	handler = gHandlers.CORS(allowedMethods, allowedHeaders, allowedOrigins, maxAge)(handler)
+
 	return &Server{
 		httpServer: &http.Server{
 			Handler:      handler,

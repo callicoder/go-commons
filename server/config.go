@@ -13,4 +13,5 @@ type CORSConfig struct {
 	AllowedOrigins []string
 	AllowedHeaders []string
 	AllowedMethods []string
+	MaxAge         int
 }
