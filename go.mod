@@ -3,6 +3,9 @@ module github.com/callicoder/go-commons
 go 1.13
 
 require (
+	github.com/DataDog/datadog-go v4.0.0+incompatible
+	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
+	github.com/cactus/go-statsd-client/statsd v0.0.0-20200728222731-a2baea3bbfc6 // indirect
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/go-redis/redis_rate/v7 v7.0.1
 	github.com/golang/protobuf v1.3.2 // indirect
@@ -10,6 +13,7 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980 // indirect
