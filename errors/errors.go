@@ -2,50 +2,155 @@ package errors
 
 import (
 	"fmt"
+	"net/http"
 
+	"github.com/callicoder/go-commons/errors/codes"
 	pkgerrors "github.com/pkg/errors"
 )
 
-// New returns an error with supplied message
 func New(msg string) error {
-	return pkgerrors.New(msg)
+	return &BaseError{
+		Code:    codes.Internal,
+		Message: msg,
+		Stack:   pkgerrors.New(msg),
+	}
 }
 
-// Wrap returns new error by annotating the passed error with the message
+func Newf(format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	return &BaseError{
+		Code:    codes.Internal,
+		Message: msg,
+		Stack:   pkgerrors.New(msg),
+	}
+}
+
 func Wrap(err error, msg string) error {
-	return pkgerrors.Wrap(err, msg)
+	return &BaseError{
+		Code:    codes.Internal,
+		Message: msg,
+		Stack:   pkgerrors.Wrap(err, msg),
+	}
 }
 
-// Wrapf returns a new error by annotating passed error with formated message
-func Wrapf(err error, msg string, args ...interface{}) error {
-	return pkgerrors.Wrapf(err, msg, args...)
+func Wrapf(err error, format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	return &BaseError{
+		Code:    codes.Internal,
+		Message: msg,
+		Stack:   pkgerrors.Wrapf(err, msg),
+	}
 }
 
-// Cause returns the underlying cause of the error by unwrapping the error
-// StackTrace.
+func WithDetails(details ...Detail) *withEntry {
+	return &withEntry{
+		details: details,
+	}
+}
+
+func WithCode(code string) *withEntry {
+	return &withEntry{
+		code: code,
+	}
+}
+
 func Cause(err error) error {
 	return pkgerrors.Cause(err)
 }
 
-// BaseError holds code and description of an error
+func HTTPStatus(err error) int64 {
+	baseErr, ok := err.(*BaseError)
+	if !ok {
+		return http.StatusInternalServerError
+	}
+
+	return codes.HttpStatus(baseErr.Code)
+}
+
+type Detail struct {
+	// Resource which has the error
+	Resource string `json:"resource,omitempty"`
+	// The specific field of the resource which has the error
+	Field string `json:"field,omitempty"`
+	// The value of the field which was erroneous
+	Value interface{} `json:"value,omitempty"`
+	// Message for this error
+	Message string `json:"message,omitempty"`
+}
+
+// BaseError holds code, message, and details of an error
 type BaseError struct {
 	//Unique Code for an error
 	Code string `json:"code"`
 	//Message is the one that is sent to the client
 	Message string `json:"message"`
-	//Description is the long description that gives further detail about the error. This is not sent to the client
-	Description string `json:"-"`
+	//Details is any additional details related to the error
+	Details []Detail `json:"details,omitempty"`
+	//Stack is used only for developers and not exposed in the json serialization
+	Stack error `json:"-"`
 }
 
-func (err BaseError) Error() string {
-	message := fmt.Sprintf("[%s] %s", err.Code, err.Message)
-	if err.Description != "" {
-		message = message + " => " + err.Description
+func (err *BaseError) Error() string {
+	return err.Stack.Error()
+}
+
+func (err *BaseError) Cause() error {
+	return pkgerrors.Cause(err.Stack)
+}
+
+type withEntry struct {
+	code    string
+	details []Detail
+}
+
+func (entry *withEntry) New(msg string) error {
+	return &BaseError{
+		Code:    entry.code,
+		Message: msg,
+		Details: entry.details,
+		Stack:   pkgerrors.New(msg),
 	}
-	return message
 }
 
-// ErrorCode returns the error code
-func (err BaseError) ErrorCode() string {
-	return err.Code
+func (entry *withEntry) Newf(format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	return &BaseError{
+		Code:    entry.code,
+		Message: msg,
+		Details: entry.details,
+		Stack:   pkgerrors.New(msg),
+	}
+}
+
+func (entry *withEntry) Wrap(err error, msg string) error {
+	return &BaseError{
+		Code:    entry.code,
+		Message: msg,
+		Details: entry.details,
+		Stack:   pkgerrors.Wrap(err, msg),
+	}
+}
+
+func (entry *withEntry) Wrapf(err error, format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	return &BaseError{
+		Code:    entry.code,
+		Message: msg,
+		Details: entry.details,
+		Stack:   pkgerrors.Wrapf(err, msg),
+	}
+}
+
+func (entry *withEntry) WithCode(code string) *withEntry {
+	return &withEntry{
+		details: entry.details,
+		code:    code,
+	}
+}
+
+func (entry *withEntry) WithDetails(details ...Detail) *withEntry {
+	return &withEntry{
+		details: append(entry.details, details...),
+		code:    entry.code,
+	}
 }
