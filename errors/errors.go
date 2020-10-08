@@ -12,7 +12,6 @@ func New(msg string) error {
 	return &BaseError{
 		Code:    codes.Internal,
 		Message: msg,
-		Stack:   pkgerrors.New(msg),
 	}
 }
 
@@ -21,24 +20,27 @@ func Newf(format string, args ...interface{}) error {
 	return &BaseError{
 		Code:    codes.Internal,
 		Message: msg,
-		Stack:   pkgerrors.New(msg),
 	}
 }
 
 func Wrap(err error, msg string) error {
-	return &BaseError{
-		Code:    codes.Internal,
-		Message: msg,
-		Stack:   pkgerrors.Wrap(err, msg),
+	return &BaseErrorStack{
+		BaseError: &BaseError{
+			Code:    codes.Internal,
+			Message: msg,
+		},
+		Stack: pkgerrors.Wrap(err, msg),
 	}
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
-	return &BaseError{
-		Code:    codes.Internal,
-		Message: msg,
-		Stack:   pkgerrors.Wrapf(err, msg),
+	return &BaseErrorStack{
+		BaseError: &BaseError{
+			Code:    codes.Internal,
+			Message: msg,
+		},
+		Stack: pkgerrors.Wrapf(err, msg),
 	}
 }
 
@@ -67,6 +69,15 @@ func HTTPStatus(err error) int64 {
 	return codes.HttpStatus(baseErr.Code)
 }
 
+func IsNotFound(err error) bool {
+	errCause := Cause(err)
+	baseErr, ok := errCause.(*BaseError)
+	if !ok {
+		return false
+	}
+	return baseErr.Code == codes.NotFound
+}
+
 type Detail struct {
 	// Resource which has the error
 	Resource string `json:"resource,omitempty"`
@@ -86,15 +97,23 @@ type BaseError struct {
 	Message string `json:"message"`
 	//Details is any additional details related to the error
 	Details []Detail `json:"details,omitempty"`
+}
+
+func (err *BaseError) Error() string {
+	return err.Message
+}
+
+type BaseErrorStack struct {
+	*BaseError
 	//Stack is used only for developers and not exposed in the json serialization
 	Stack error `json:"-"`
 }
 
-func (err *BaseError) Error() string {
+func (err *BaseErrorStack) Error() string {
 	return err.Stack.Error()
 }
 
-func (err *BaseError) Cause() error {
+func (err *BaseErrorStack) Cause() error {
 	return pkgerrors.Cause(err.Stack)
 }
 
@@ -108,7 +127,6 @@ func (entry *withEntry) New(msg string) error {
 		Code:    entry.code,
 		Message: msg,
 		Details: entry.details,
-		Stack:   pkgerrors.New(msg),
 	}
 }
 
@@ -118,26 +136,29 @@ func (entry *withEntry) Newf(format string, args ...interface{}) error {
 		Code:    entry.code,
 		Message: msg,
 		Details: entry.details,
-		Stack:   pkgerrors.New(msg),
 	}
 }
 
 func (entry *withEntry) Wrap(err error, msg string) error {
-	return &BaseError{
-		Code:    entry.code,
-		Message: msg,
-		Details: entry.details,
-		Stack:   pkgerrors.Wrap(err, msg),
+	return &BaseErrorStack{
+		BaseError: &BaseError{
+			Code:    entry.code,
+			Message: msg,
+			Details: entry.details,
+		},
+		Stack: pkgerrors.Wrap(err, msg),
 	}
 }
 
 func (entry *withEntry) Wrapf(err error, format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
-	return &BaseError{
-		Code:    entry.code,
-		Message: msg,
-		Details: entry.details,
-		Stack:   pkgerrors.Wrapf(err, msg),
+	return &BaseErrorStack{
+		BaseError: &BaseError{
+			Code:    entry.code,
+			Message: msg,
+			Details: entry.details,
+		},
+		Stack: pkgerrors.Wrapf(err, msg),
 	}
 }
 

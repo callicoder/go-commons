@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/callicoder/go-commons/errors/codes"
@@ -19,7 +20,24 @@ func TestWrap(t *testing.T) {
 	err2 := Wrap(err1, "Error2")
 	err3 := Wrap(err2, "Error3")
 
-	assert.EqualError(t, Cause(err3), "Error1")
+	errCause := Cause(err3)
+	assert.EqualError(t, errCause, "Error1")
+
+	_, ok := err3.(*BaseErrorStack)
+	assert.True(t, ok)
+
+	_, ok = errCause.(*BaseError)
+	assert.True(t, ok)
+}
+
+func TestIsNotFound(t *testing.T) {
+	err := WithCode(codes.NotFound).Newf("Resource with id %d not found", 1234)
+	wrappedErr := Wrap(err, "Not found error from database")
+	normalErr := errors.New("Some other error")
+
+	assert.True(t, IsNotFound(err))
+	assert.True(t, IsNotFound(wrappedErr))
+	assert.False(t, IsNotFound(normalErr))
 }
 
 func TestWithDetailWithCode(t *testing.T) {
