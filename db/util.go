@@ -1,12 +1,15 @@
-package nullutil
+package db
 
 import (
 	"database/sql"
 	"time"
 )
 
-func NewNullString(s string) sql.NullString {
-	return sql.NullString{String: s, Valid: s != ""}
+func NewNullString(value string) sql.NullString {
+	return sql.NullString{
+		String: value,
+		Valid:  len(value) != 0,
+	}
 }
 
 func NewNullInt64(i int64) sql.NullInt64 {

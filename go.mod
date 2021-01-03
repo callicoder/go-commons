@@ -10,8 +10,11 @@ require (
 	github.com/go-redis/redis_rate/v7 v7.0.1
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/gorilla/handlers v1.4.2
+	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/lib/pq v1.9.0
 	github.com/pkg/errors v0.8.1
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/sirupsen/logrus v1.4.2

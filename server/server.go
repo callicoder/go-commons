@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -11,8 +12,8 @@ import (
 )
 
 type Server struct {
-	httpServer *http.Server
-	config     Config
+	server *http.Server
+	config Config
 }
 
 func New(conf Config, handler http.Handler) *Server {
@@ -23,30 +24,36 @@ func New(conf Config, handler http.Handler) *Server {
 	handler = handlers.CORS(allowedMethods, allowedHeaders, allowedOrigins, maxAge)(handler)
 
 	return &Server{
-		httpServer: &http.Server{
+		server: &http.Server{
 			Handler:      handler,
-			ReadTimeout:  time.Duration(conf.ReadTimeout) * time.Millisecond,
-			WriteTimeout: time.Duration(conf.WriteTimeout) * time.Millisecond,
+			ReadTimeout:  time.Duration(conf.ReadTimeoutMs) * time.Millisecond,
+			WriteTimeout: time.Duration(conf.WriteTimeoutMs) * time.Millisecond,
 			Addr:         fmt.Sprintf("0.0.0.0:%d", conf.Port),
 		},
 		config: conf,
 	}
 }
 
-func (s *Server) Start() {
+func (s *Server) Start() error {
+	lis, err := net.Listen("tcp", s.server.Addr)
+	if err != nil {
+		return fmt.Errorf("%w :: Failed to start listener on %s", err, s.server.Addr)
+	}
+
 	go func() {
 		log.Printf("Starting http server on port %v", s.config.Port)
-		err := s.httpServer.ListenAndServe()
+		err := s.server.Serve(lis)
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start http server %v", err)
-			return
 		}
 	}()
+
+	return nil
 }
 
-func (s *Server) Shutdown() {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.config.GracefulShutdownTimeout)*time.Millisecond)
+func (s *Server) Shutdown() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.config.GracefulShutdownTimeoutMs)*time.Millisecond)
 	defer cancel()
-	s.httpServer.Shutdown(ctx)
-	log.Println("Shutting down http server.")
+	log.Printf("Shutting down http server")
+	return s.server.Shutdown(ctx)
 }
