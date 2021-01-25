@@ -1,12 +1,17 @@
 package redis
 
 import (
+	"context"
 	"log"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+)
+
+var (
+	ctx = context.Background()
 )
 
 type RedisTestSuite struct {
@@ -54,8 +59,8 @@ func (suite *RedisTestSuite) SetupSuite() {
 }
 
 func (suite *RedisTestSuite) TearDownTest() {
-	suite.client.FlushDB()
-	suite.clusterClient.FlushDB()
+	suite.client.FlushDB(ctx)
+	suite.clusterClient.FlushDB(ctx)
 }
 
 func (suite *RedisTestSuite) TearDownSuite() {
@@ -68,10 +73,10 @@ func (suite *RedisTestSuite) TestSetAndGet() {
 		suite.Run("It should set and get a key in redis", func() {
 			key := "test"
 
-			err := client.Set(key, "Hello World", 0).Err()
+			err := client.Set(ctx, key, "Hello World", 0).Err()
 			suite.NoError(err)
 
-			value, err := client.Get(key).Result()
+			value, err := client.Get(ctx, key).Result()
 			suite.NoError(err)
 			suite.Equal("Hello World", value)
 		})
@@ -81,17 +86,17 @@ func (suite *RedisTestSuite) TestSetAndGet() {
 func (suite *RedisTestSuite) TestHSetAndHGet() {
 	for _, client := range []Client{suite.client, suite.clusterClient} {
 		suite.Run("It should HSet and HGet a key in redis", func() {
-			err := client.HSet("user", "name", "Sachin").Err()
+			err := client.HSet(ctx, "user", "name", "Sachin").Err()
 			suite.NoError(err)
 
-			err = client.HSet("user", "age", 25).Err()
+			err = client.HSet(ctx, "user", "age", 25).Err()
 			suite.NoError(err)
 
-			value, err := client.HGet("user", "name").Result()
+			value, err := client.HGet(ctx, "user", "name").Result()
 			suite.NoError(err)
 			suite.Equal("Sachin", value)
 
-			value, err = client.HGet("user", "age").Result()
+			value, err = client.HGet(ctx, "user", "age").Result()
 			suite.NoError(err)
 			suite.Equal("25", value)
 		})

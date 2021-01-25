@@ -1,12 +1,13 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
 	"errors"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 )
 
 var (
@@ -28,9 +29,9 @@ type Config struct {
 type Client interface {
 	redis.Cmdable
 
-	SetStruct(key string, value interface{}, ttl time.Duration) error
-	ReadStruct(key string, v interface{}) error
-	HSetEx(key, field string, value interface{}, t time.Duration) error
+	SetStruct(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+	ReadStruct(ctx context.Context, key string, v interface{}) error
+	HSetEx(ctx context.Context, key, field string, value interface{}, t time.Duration) error
 	Close() error
 	ClusterMode() bool
 }
@@ -48,6 +49,8 @@ func NewClient(c Config) (Client, error) {
 		return nil, errInvalidOptions
 	}
 
+	ctx := context.Background()
+
 	if len(c.Addrs) == 1 {
 		r := &client{}
 		r.Client = redis.NewClient(
@@ -61,7 +64,7 @@ func NewClient(c Config) (Client, error) {
 				PoolSize:     c.PoolSize,
 			})
 
-		if err := r.Ping().Err(); err != nil {
+		if err := r.Ping(ctx).Err(); err != nil {
 			return nil, errConnecting
 		}
 		return r, nil
@@ -78,7 +81,7 @@ func NewClient(c Config) (Client, error) {
 			PoolSize:     c.PoolSize,
 		})
 
-	if err := r.Ping().Err(); err != nil {
+	if err := r.Ping(ctx).Err(); err != nil {
 		return nil, errConnecting
 	}
 
@@ -86,29 +89,29 @@ func NewClient(c Config) (Client, error) {
 }
 
 // Single client
-func (r *client) SetStruct(key string, value interface{}, ttl time.Duration) error {
+func (r *client) SetStruct(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	jsonData, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 
-	return r.Set(key, jsonData, ttl).Err()
+	return r.Set(ctx, key, jsonData, ttl).Err()
 }
 
-func (r *client) ReadStruct(key string, v interface{}) error {
-	value, err := r.Get(key).Bytes()
+func (r *client) ReadStruct(ctx context.Context, key string, v interface{}) error {
+	value, err := r.Get(ctx, key).Bytes()
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(value, v)
 }
 
-func (r *client) HSetEx(key, field string, value interface{}, ttl time.Duration) error {
+func (r *client) HSetEx(ctx context.Context, key, field string, value interface{}, ttl time.Duration) error {
 	pipe := r.TxPipeline()
-	pipe.HSet(key, field, value)
-	pipe.Expire(key, ttl)
+	pipe.HSet(ctx, key, field, value)
+	pipe.Expire(ctx, key, ttl)
 
-	_, err := pipe.Exec()
+	_, err := pipe.Exec(ctx)
 	return err
 }
 
@@ -117,28 +120,28 @@ func (r *client) ClusterMode() bool {
 }
 
 // Cluster client
-func (r *clusterClient) SetStruct(key string, value interface{}, ttl time.Duration) error {
+func (r *clusterClient) SetStruct(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	jsonData, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
-	return r.Set(key, jsonData, ttl).Err()
+	return r.Set(ctx, key, jsonData, ttl).Err()
 }
 
-func (r *clusterClient) ReadStruct(key string, v interface{}) error {
-	value, err := r.Get(key).Bytes()
+func (r *clusterClient) ReadStruct(ctx context.Context, key string, v interface{}) error {
+	value, err := r.Get(ctx, key).Bytes()
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(value, v)
 }
 
-func (r *clusterClient) HSetEx(key, field string, value interface{}, ttl time.Duration) error {
+func (r *clusterClient) HSetEx(ctx context.Context, key, field string, value interface{}, ttl time.Duration) error {
 	pipe := r.TxPipeline()
-	pipe.HSet(key, field, value)
-	pipe.Expire(key, ttl)
+	pipe.HSet(ctx, key, field, value)
+	pipe.Expire(ctx, key, ttl)
 
-	_, err := pipe.Exec()
+	_, err := pipe.Exec(ctx)
 	return err
 }
 
