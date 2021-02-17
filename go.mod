@@ -7,9 +7,7 @@ require (
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/cactus/go-statsd-client/statsd v0.0.0-20200728222731-a2baea3bbfc6 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/go-redis/redis/v7 v7.0.0-beta.4 // indirect
 	github.com/go-redis/redis/v8 v8.4.10
-	github.com/go-redis/redis_rate/v7 v7.0.1
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect

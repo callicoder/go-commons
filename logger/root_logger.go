@@ -1,13 +1,6 @@
 package logger
 
-import (
-	"runtime"
-	"strings"
-
-	"github.com/sirupsen/logrus"
-)
-
-var rootLogger *logrus.Logger
+var rootLogger Logger
 
 func SetupRootLogger(c Config) {
 	rootLogger = newLogrusLogger(c)
@@ -18,36 +11,7 @@ func WithFields(fields Fields) Logger {
 		panic("Logger not initialized")
 	}
 
-	srcInfo := getSourceInfoFields()
-	if fields != nil {
-		for key, val := range fields {
-			srcInfo[key] = val
-		}
-	}
-	return rootLogger.WithFields(logrus.Fields(srcInfo))
-}
-
-func getSourceInfoFields() map[string]interface{} {
-	file, line := getFileInfo(4)
-	m := map[string]interface{}{
-		"file": file,
-		"line": line,
-	}
-	return m
-}
-
-func getFileInfo(subtractStackLevels int) (string, int) {
-	_, file, line, _ := runtime.Caller(subtractStackLevels)
-	return chopPath(file), line
-}
-
-// return the source filename after the last slash
-func chopPath(original string) string {
-	i := strings.LastIndex(original, "/")
-	if i != -1 {
-		return original[i+1:]
-	}
-	return original
+	return rootLogger.WithFields(fields)
 }
 
 func Debugf(format string, args ...interface{}) {

@@ -8,8 +8,9 @@ const (
 )
 
 type Config struct {
-	Level  string
-	Format string
+	Level        string
+	Format       string
+	ReportCaller bool
 }
 
 type Logger interface {
@@ -18,11 +19,14 @@ type Logger interface {
 	Warn(args ...interface{})
 	Error(args ...interface{})
 	Fatal(args ...interface{})
+
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
 	Warnf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
+
+	WithFields(fields Fields) Logger
 }
 
 type Fields map[string]interface{}
